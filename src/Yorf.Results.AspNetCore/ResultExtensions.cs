@@ -5,16 +5,16 @@ using Yorf.Results.Core;
 namespace Yorf.Results.AspNetCore;
 public static class ResultExtensions
 {
-    public static IActionResult Handle(this IResult result, Controller controller)
+    public static IActionResult Handle(this IResult result, ControllerBase controller)
         => ConvertToActionResult(controller, result);
 
-    public static IActionResult Handle(this IResult result, Controller controller, Func<object?, IActionResult> handler)
+    public static IActionResult Handle(this IResult result, ControllerBase controller, Func<object?, IActionResult> handler)
         => ConvertToActionResult(controller, result, handler);
 
-    public static IActionResult Handle<TModel>(this IResult result, Controller controller, Func<TModel?, IActionResult> handler)
+    public static IActionResult Handle<TModel>(this IResult result, ControllerBase controller, Func<TModel?, IActionResult> handler)
        => ConvertToActionResult(controller, result, handler);
 
-    private static IActionResult ConvertToActionResult(Controller controller, IResult result)
+    private static IActionResult ConvertToActionResult(ControllerBase controller, IResult result)
     {
         return result.Status switch
         {
@@ -30,7 +30,7 @@ public static class ResultExtensions
         };
     }
 
-    private static IActionResult ConvertToActionResult(Controller controller, IResult result, Func<object?, IActionResult> handler)
+    private static IActionResult ConvertToActionResult(ControllerBase controller, IResult result, Func<object?, IActionResult> handler)
     {
         return result.Status switch
         {
@@ -46,7 +46,7 @@ public static class ResultExtensions
         };
     }
 
-    private static IActionResult ConvertToActionResult<TModel>(Controller controller, IResult result, Func<TModel?, IActionResult> handler)
+    private static IActionResult ConvertToActionResult<TModel>(ControllerBase controller, IResult result, Func<TModel?, IActionResult> handler)
     {
         return result.Status switch
         {
@@ -62,7 +62,7 @@ public static class ResultExtensions
         };
     }
 
-    private static ActionResult BadRequest(Controller controller, IResult result)
+    private static ActionResult BadRequest(ControllerBase controller, IResult result)
     {
         foreach (var error in result.ValidationErrors)
         {
@@ -72,7 +72,7 @@ public static class ResultExtensions
         return controller.BadRequest(controller.ModelState);
     }
 
-    private static ActionResult UnprocessableEntity(Controller controller, IResult result)
+    private static ActionResult UnprocessableEntity(ControllerBase controller, IResult result)
     {
         var details = new StringBuilder("Next error(s) occured:");
 
@@ -84,9 +84,7 @@ public static class ResultExtensions
             Detail = details.ToString()
         };
 
-        bool isAjax = controller.Request.Headers["X-Requested-With"] == "XMLHttpRequest";
-
-        return isAjax ? controller.UnprocessableEntity(problemModel) : controller.View("Problem", problemModel);
+        return controller.UnprocessableEntity(problemModel);
     }
 
     public static string GetErrorMessage(this IResult result)
