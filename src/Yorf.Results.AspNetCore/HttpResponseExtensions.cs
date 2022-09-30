@@ -25,8 +25,8 @@ public static class HttpResponseExtensions
 
         if (httpResponse.IsSuccessStatusCode)
         {
-            var payment = JsonConvert.DeserializeObject<T>(responseContent);
-            return Result.Success(payment!);
+            var resultObject = JsonConvert.DeserializeObject<T>(responseContent);
+            return Result.Success(resultObject!);
         }
 
         return ProcessErrorResult(responseContent, httpResponse.StatusCode);
