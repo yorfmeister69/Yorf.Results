@@ -2,7 +2,217 @@
     ViewData["Title"] = "Home Page";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+    pre {
+        background-color: ghostwhite;
+        border: 1px solid silver;
+        padding: 10px 20px;
+        margin: 20px;
+    }
+
+    .json-key {
+        color: brown;
+    }
+
+    .json-value {
+        color: navy;
+    }
+
+    .json-string {
+        color: olive;
+    }
+
+</style>
+
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            API Response
+        </div>
+        <div class="card-body">
+            <pre><code id=jsonResponse></code></pre>
+        </div>
+    </div>
+
+    <br />
+
+    <div class="card">
+
+        <div class="card-body">
+
+            <div>
+                <button class="btn btn-primary mb-4" type="button" onclick="getAll()">Get All</button>
+
+
+                <div class="alert alert-warning" role="alert">
+                    Enter London to get error response and New york to get not found response
+                </div>
+                <div class="input-group mb-4">
+                    <input type="text" class="form-control" placeholder="Enter city name to get" id="getCity">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button" onclick="getWeatherOfCity()">Get By City</button>
+                    </div>
+                </div>
+
+                <br />
+
+                <div>
+                    
+                <div class="alert alert-warning" role="alert">
+                    Enter Tokyo as a city name to get invalid response
+                </div>
+                    <div class="form-group mb-2">
+                        <label for="cityName">City Name</label>
+                        <input type="text" class="form-control" id="cityName" placeholder="Enter city name">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="cityDesc">City Description</label>
+                        <input type="text" class="form-control" id="cityDesc" placeholder="Enter city desc">
+                    </div>
+                    <button type="button" onclick="createCity()" class="btn btn-primary">Create City</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.35/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        if (!library)
+            var library = {};
+
+        library.json = {
+            replacer: function(match, pIndent, pKey, pVal, pEnd) {
+                var key = '<span class=json-key>';
+                var val = '<span class=json-value>';
+                var str = '<span class=json-string>';
+                var r = pIndent || '';
+                if (pKey)
+                    r = r + key + pKey.replace(/[": ]/g, '') + '</span>: ';
+                if (pVal)
+                    r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
+                return r + (pEnd || '');
+            },
+            prettyPrint: function(obj) {
+                var jsonLine = /^( *)("[\w]+": )?("[^"]*"|[\w.+-]*)?([,[{])?$/mg;
+                return JSON.stringify(obj, null, 3)
+                    .replace(/&/g, '&amp;').replace(/\\"/g, '&quot;')
+                    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(jsonLine, library.json.replacer);
+            }
+        };
+
+
+
+        let printJson = (obj) => {
+            $('#jsonResponse').html(library.json.prettyPrint(obj));
+
+        }
+
+
+        let getAll = () => {
+            $.ajax({
+                url: '/Home/GetAll',
+                method: 'GET',
+                success: (data) => {
+                    toastr.success('Operation success!');
+                    printJson(data);
+                },
+                error: (err) => {
+                    console.log("Error: ", err);
+                    let obj = err.responseJSON;
+                    if (err.status === 400) {
+                        for (var prop in obj) {
+                            if (obj.hasOwnProperty(prop)) {
+                                toastr.error(prop + " : " + obj[prop][0]);
+                            }
+                        }
+                    }
+                    else if (err.status === 401) {
+                        Swal.fire('Error', 'You have been logged out.', 'error');
+                    }
+                    else {
+                        Swal.fire('Error', obj?.detail ?? 'Something went wrong! Check console log for errors', 'error');
+                    }
+                },
+            });
+        }
+
+        let getWeatherOfCity = () => {
+            let city = $('#getCity').val();
+            $.ajax({
+                url: '/Home/GetWeatherOfCity',
+                method: 'GET',
+                data: {
+                    city
+                },
+                success: (data) => {
+                    toastr.success('Operation success!');
+                    printJson(data);
+                },
+                error: (err) => {
+                    console.log("Error: ", err);
+                    let obj = err.responseJSON;
+                    if (err.status === 400) {
+                        for (var prop in obj) {
+                            if (obj.hasOwnProperty(prop)) {
+                                toastr.error(prop + " : " + obj[prop][0]);
+                            }
+                        }
+                    }
+                    else if (err.status === 401) {
+                        Swal.fire('Error', 'You have been logged out.', 'error');
+                    }
+                    else {
+                        Swal.fire('Error', obj?.detail ?? 'Something went wrong! Check console log for errors', 'error');
+                    }
+                },
+            });
+        }
+
+        let createCity = () => {
+            let cityName = $('#cityName').val();
+            let cityDesc = $('#cityDesc').val();
+            $.ajax({
+                url: '/Home/CreateCity',
+                method: 'POST',
+                data: {
+                    City: cityName,
+                    Description: cityDesc
+                },
+                success: (data) => {
+                    toastr.success('Operation success!');
+                    printJson(data);
+                },
+                error: (err) => {
+                    console.log("Error: ", err);
+                    let obj = err.responseJSON;
+                    if (err.status === 400) {
+                        for (var prop in obj) {
+                            if (obj.hasOwnProperty(prop)) {
+                                toastr.error(prop + " : " + obj[prop][0]);
+                            }
+                        }
+                    }
+                    else if (err.status === 401) {
+                        Swal.fire('Error', 'You have been logged out.', 'error');
+                    }
+                    else {
+                        Swal.fire('Error', obj?.detail ?? 'Something went wrong! Check console log for errors', 'error');
+                    }
+                },
+            });
+        }
+    </script>
+}

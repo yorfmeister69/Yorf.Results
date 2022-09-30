@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Net;
 using Yorf.Results.Core;
 
@@ -63,6 +64,26 @@ public static class HttpResponseExtensions
                     else
                     {
                         return Result.Error($"An error occured in the Gateway API. Status ({httpStatusCode})");
+                    }
+
+                }
+            case HttpStatusCode.UnprocessableEntity:
+                {
+                    //parse into a ProblemDetails model.
+                    try
+                    {
+                        var problemDetails = JsonConvert.DeserializeObject<ProblemDetails>(responseContent);
+                        
+                        if(problemDetails.Detail.StartsWith("Next error(s) occured:*"))
+                        {
+                            problemDetails.Detail = problemDetails.Detail.Replace("Next error(s) occured:*", "");
+                        }
+
+                        return Result.Error(problemDetails!.Detail!);
+                    }
+                    catch (Exception)
+                    {
+                        return Result.Error($"Gateway API Error ({httpStatusCode}): {responseContent}");
                     }
 
                 }

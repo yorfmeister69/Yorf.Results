@@ -1,7 +1,15 @@
+using Sample.Client.Mvc.ApiClients;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+//add api client
+builder.Services.AddHttpClient<IWeatherControlApi, WeatherControlApi>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["WeatherControlApiBaseUrl"]);
+});
 
 var app = builder.Build();
 

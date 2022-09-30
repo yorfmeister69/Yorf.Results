@@ -6,4 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Yorf.Results.AspNetCore\Yorf.Results.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\Yorf.Results.Core\Yorf.Results.Core.csproj" />
+  </ItemGroup>
+
 </Project>
